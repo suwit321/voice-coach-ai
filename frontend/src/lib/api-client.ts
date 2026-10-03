@@ -1,7 +1,15 @@
 import { AnalysisResponse, AnalysisListItem, PresetConfig } from './types';
 import { getSettings } from './settings';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const s = getSettings();
+    if (s.apiUrl && s.apiUrl.trim()) {
+      return s.apiUrl.trim().replace(/\/+$/, '');
+    }
+  }
+  return (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+}
 
 function getSessionId(): string {
   if (typeof window === 'undefined') return '';
@@ -33,7 +41,8 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     headers.set('X-STT-API-Key', settings.llmApiKey);
   }
 
-  const response = await fetch(`${API_BASE}${url}`, {
+  const apiBase = getApiBase();
+  const response = await fetch(`${apiBase}${url}`, {
     ...options,
     headers,
   });

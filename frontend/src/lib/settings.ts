@@ -16,7 +16,8 @@ export interface AppSettings {
   // Audio Hardware & Processing
   noiseSuppression: boolean;
   echoCancellation: boolean;
-  autoGainControl: boolean;
+  // API Endpoint
+  apiUrl?: string;
 
   // Privacy & Retention
   retainAudio: boolean;
@@ -28,6 +29,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   targetWpmMin: 100,
   targetWpmMax: 150,
   language: 'th',
+
+  apiUrl: '',
 
   llmProvider: 'openai',
   llmModel: 'gpt-4o',

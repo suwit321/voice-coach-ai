@@ -188,6 +188,28 @@ export default function SettingsPage() {
                 </p>
               </div>
 
+              {/* Backend API Server URL */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-slate-800">
+                    ที่อยู่ Backend Server URL (API Host)
+                  </label>
+                  <span className="text-2xs text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">
+                    {settings.apiUrl ? 'กำหนดเอง' : 'ค่าเริ่มต้น (Default)'}
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={settings.apiUrl || ''}
+                  onChange={(e) => handleChange('apiUrl', e.target.value)}
+                  placeholder="เช่น http://localhost:8000 หรือ https://your-backend.onrender.com"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                />
+                <p className="text-xs text-slate-500">
+                  หากรันในเครื่องให้เว้นว่างไว้หรือใส่ <code>http://localhost:8000</code> หาก Deploy บน Render ให้ใส่ URL ของ Render
+                </p>
+              </div>
+
               {/* Provider Selector Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
