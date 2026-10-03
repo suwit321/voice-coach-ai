@@ -16,6 +16,8 @@ export interface AppSettings {
   // Audio Hardware & Processing
   noiseSuppression: boolean;
   echoCancellation: boolean;
+  autoGainControl: boolean;
+
   // API Endpoint
   apiUrl?: string;
 
