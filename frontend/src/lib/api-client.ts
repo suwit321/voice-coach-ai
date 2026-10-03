@@ -42,11 +42,19 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   }
 
   const apiBase = getApiBase();
-  const response = await fetch(`${apiBase}${url}`, {
-    ...options,
-    headers,
-  });
-
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase}${url}`, {
+      ...options,
+      headers,
+    });
+  } catch (netErr: any) {
+    console.error('Fetch error connecting to:', `${apiBase}${url}`, netErr);
+    throw new Error(
+      `ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ (${apiBase}) ` +
+      `กรุณาตรวจสอบว่า Backend เปิดทำงานอยู่หรือไม่ หรือไปที่หน้า 'ตั้งค่า' เพื่อระบุ Backend Server URL ให้ถูกต้อง`
+    );
+  }
 
   if (!response.ok) {
     let errorDetail = response.statusText;
