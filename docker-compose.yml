@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: voice-coach-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Voice Coach AI
+      - DEBUG=false
+      - DATABASE_URL=sqlite:///./voice_coach.db
+      - UPLOAD_DIR=./storage/uploads
+      - CORS_ORIGINS=["http://localhost:3000","http://localhost"]
+      - LLM_PROVIDER=openai
+      - LLM_MODEL=gpt-4o
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - backend-data:/app/storage
+      - backend-db:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
+    container_name: voice-coach-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+
+volumes:
+  backend-data:
+  backend-db:
