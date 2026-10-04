@@ -25,6 +25,11 @@ class AudioMetrics(BaseModel):
     pitch_mean: float
     pitch_std: float
     speech_ratio: float
+    timeline_labels: Optional[List[str]] = None
+    energy_series: Optional[List[float]] = None
+    pitch_series: Optional[List[float]] = None
+    pitch_feedback: Optional[List[str]] = None
+    energy_feedback: Optional[List[str]] = None
 
 class RadarData(BaseModel):
     labels: List[str]

@@ -53,6 +53,11 @@ export interface AudioMetrics {
   pitch_mean: number;
   pitch_std: number;
   speech_ratio: number;
+  timeline_labels?: string[];
+  energy_series?: number[];
+  pitch_series?: number[];
+  pitch_feedback?: string[];
+  energy_feedback?: string[];
 }
 
 export interface RadarData {

@@ -272,7 +272,7 @@ export default function AnalyzePage() {
                 <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                   <Button 
                     size="sm" 
-                    variant="default"
+                    variant="primary"
                     onClick={() => {
                       setTranscript('');
                       handleProceedToStep3();

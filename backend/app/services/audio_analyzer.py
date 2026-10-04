@@ -54,6 +54,60 @@ def analyze_audio(audio_path: str) -> dict:
         total_pause_time = sum(p['duration_sec'] for p in pauses)
         speech_ratio = float((duration_sec - total_pause_time) / duration_sec) if duration_sec > 0 else 0.0
         
+        # Sample ~30-40 points for visual energy & pitch timeline charts
+        num_samples = min(35, max(10, int(duration_sec)))
+        time_points = np.linspace(0, duration_sec, num_samples)
+        
+        # Resample RMS Energy (0 - 100 scaled)
+        rms_norm = (rms / (np.max(rms) + 1e-6)) * 100.0
+        energy_series = []
+        hop_time = 512 / sr
+        for t in time_points:
+            idx = min(len(rms_norm) - 1, int(t / hop_time))
+            energy_series.append(round(float(rms_norm[idx]), 1))
+            
+        # Resample Pitch F0 (Hz)
+        pyin_hop_time = 1024 / sr
+        pitch_series = []
+        for t in time_points:
+            idx = min(len(f0) - 1, int(t / pyin_hop_time))
+            val = float(f0[idx]) if (idx < len(f0) and voiced_flag[idx] and not np.isnan(f0[idx])) else None
+            pitch_series.append(round(val, 1) if val is not None else 0.0)
+
+        # Labels in mm:ss
+        timeline_labels = [f"{int(t // 60):02d}:{int(t % 60):02d}" for t in time_points]
+
+        # Pitch & Energy Coaching Diagnosis
+        # Pitch classification
+        pitch_feedback = []
+        if pitch_mean > 240:
+            pitch_feedback.append("ระดับเสียงพูดค่อนข้างสูง (High Pitch) อาจทำให้ผู้ฟังรู้สึกตึงเครียดหรือตื่นเต้น ลองผ่อนลมหายใจลงสู่กระบังลมเพื่อลดคีย์เสียงลง")
+        elif pitch_mean < 110 and pitch_mean > 0:
+            pitch_feedback.append("ระดับเสียงทุ้มต่ำลึก (Deep Pitch) ให้ความรู้สึกสุขุม แต่อย่าให้ราบเรียบเกินไปจนดูเนือย")
+        else:
+            pitch_feedback.append("ระดับเสียงพื้นฐานอยู่ในเกณฑ์มาตรฐานที่ฟังแล้วเป็นธรรมชาติ สบายหู")
+
+        if pitch_std < 15:
+            pitch_feedback.append("เสียงค่อนข้างราบเรียบเป็นโทนเดียว (Monotone) ขาดลูกเล่น แนะนำให้เพิ่มการยกเสียงสูงช่วงท้ายคำถาม หรือเน้นเสียงหนัก-เบาในคำสำคัญ")
+        elif pitch_std > 40:
+            pitch_feedback.append("มีระดับเสียงสูงต่ำที่หลากหลายมาก (Dynamic Pitch) ดึงดูดความสนใจได้ดี แต่ระวังอย่าให้แกว่งเกินไปจนดูไม่มั่นคง")
+        else:
+            pitch_feedback.append("การเปลี่ยนระดับเสียงสูง-ต่ำ (Pitch Variation) มีชีวิตชีวาพอเหมาะ ไม่น่าเบื่อ")
+
+        # Energy / Volume classification
+        energy_feedback = []
+        if energy_mean < 0.02:
+            energy_feedback.append("พลังเสียงค่อนข้างเบาหรือไมค์อยู่ห่างเกินไป อาจทำให้ผู้ฟังต้องเพ่งสมาธิ แนะนำให้พูดเปล่งเสียงให้เต็มเสียงจากท้อง")
+        elif energy_mean > 0.15:
+            energy_feedback.append("พลังเสียงหนักแน่น ชัดเจน แต่อาจกระแทกเสียงในบางช่วง ควบคุมไม่ให้ดังเกินความจำเป็น")
+        else:
+            energy_feedback.append("พลังเสียงและความดังเฉลี่ยอยู่ในระดับมาตรฐานที่ฟังชัดเจนและมั่นใจ")
+
+        if energy_std < 0.01:
+            energy_feedback.append("ระดับความดังสม่ำเสมอเกินไปจนขาดจุดเน้น (Emphasis) ลองทิ้งน้ำหนักเสียงลงบน Keyword สำคัญ")
+        else:
+            energy_feedback.append("มีการเน้นหนัก-เบาในแต่ละประโยคได้เป็นธรรมชาติ")
+
         # Return structured metrics
         return {
             'duration_sec': duration_sec,
@@ -67,6 +121,11 @@ def analyze_audio(audio_path: str) -> dict:
             'avg_pause_duration': total_pause_time / len(pauses) if pauses else 0.0,
             'speech_ratio': speech_ratio,
             'pauses': pauses,
+            'timeline_labels': timeline_labels,
+            'energy_series': energy_series,
+            'pitch_series': pitch_series,
+            'pitch_feedback': pitch_feedback,
+            'energy_feedback': energy_feedback,
         }
     except Exception as e:
         logger.error(f"Error analyzing audio {audio_path}: {e}")

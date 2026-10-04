@@ -196,6 +196,11 @@ def run_analysis_pipeline(
             "pitch_mean": float(audio_metrics.get("pitch_mean", 0.0)),
             "pitch_std": float(audio_metrics.get("pitch_std", 0.0)),
             "speech_ratio": float(audio_metrics.get("speech_ratio", 0.0)),
+            "timeline_labels": audio_metrics.get("timeline_labels", []),
+            "energy_series": audio_metrics.get("energy_series", []),
+            "pitch_series": audio_metrics.get("pitch_series", []),
+            "pitch_feedback": audio_metrics.get("pitch_feedback", []),
+            "energy_feedback": audio_metrics.get("energy_feedback", []),
         }
 
         # 10. Update DB record

@@ -10,6 +10,7 @@ import { RadarChart } from '@/components/radar-chart';
 import { MetricsDisplay } from '@/components/metrics-display';
 import { FeedbackPanel } from '@/components/feedback-panel';
 import { TranscriptEditor } from '@/components/transcript-editor';
+import { PitchEnergyChart } from '@/components/pitch-energy-chart';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { 
@@ -282,11 +283,18 @@ export default function ResultsPage() {
       )}
 
       {/* Section 3: Acoustics & Speech Metrics */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
-          สถิติทางกายภาพของเสียง (Audio & Prosody Metrics)
-        </h2>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
+            สถิติทางกายภาพของเสียง (Audio & Prosody Metrics)
+          </h2>
+        </div>
+        
+        {/* Pitch & Energy Dynamics Chart with Coaching Insights */}
+        <PitchEnergyChart metrics={data.metrics} />
+
+        {/* Existing numeric metric cards */}
         <MetricsDisplay metrics={data.metrics} />
       </div>
 
