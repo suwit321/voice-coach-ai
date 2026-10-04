@@ -111,8 +111,8 @@ def run_analysis_pipeline(
         if (not transcript or not transcript.strip()):
             if stt_key:
                 try:
-                    logger.info("Transcribing audio with Whisper...")
-                    stt_res = transcribe_audio(work_audio_path, language=language, api_key=stt_key)
+                    logger.info(f"Transcribing audio with {effective_llm_provider}...")
+                    stt_res = transcribe_audio(work_audio_path, language=language, api_key=stt_key, provider=effective_llm_provider)
                     transcript = stt_res.get('text', '')
                     stt_segments = stt_res.get('segments', [])
                 except Exception as e:

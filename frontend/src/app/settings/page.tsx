@@ -285,8 +285,10 @@ export default function SettingsPage() {
               <div className="pt-4 border-t border-gray-100 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900">การถอดเสียงเป็นข้อความ (Whisper STT)</h4>
-                    <p className="text-xs text-gray-500">ใช้สำหรับแปลงเสียงพูดภาษาไทยเป็นข้อความอัตโนมัติ</p>
+                    <h4 className="text-sm font-bold text-gray-900">การถอดเสียงพูดเป็นข้อความอัตโนมัติ (Speech-to-Text)</h4>
+                    <p className="text-xs text-gray-500">
+                      รองรับทั้ง OpenAI Whisper (คีย์ sk-...) และ Google Gemini Audio (คีย์ AIza... ฟรี)
+                    </p>
                   </div>
                   <input
                     type="checkbox"
@@ -300,7 +302,7 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-semibold text-gray-600">
-                        OpenAI Whisper API Key (เว้นว่างไว้หากใช้คีย์เดียวกับ OpenAI ด้านบน)
+                        คีย์เฉพาะสำหรับถอดเสียง (STT API Key) — เว้นว่างเพื่อใช้คีย์หลักด้านบน
                       </label>
                       <button
                         type="button"
@@ -315,9 +317,12 @@ export default function SettingsPage() {
                       type={showSttKey ? 'text' : 'password'}
                       value={settings.sttApiKey}
                       onChange={(e) => handleChange('sttApiKey', e.target.value)}
-                      placeholder="sk-... (เว้นว่างเพื่อใช้คีย์หลัก)"
+                      placeholder="ใส่ OpenAI (sk-...) หรือ Google Gemini (AIza...) หรือเว้นว่าง"
                       className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
                     />
+                    <p className="text-2xs text-gray-400">
+                      💡 หากเลือกผู้ให้บริการเป็น Google Gemini ระบบจะใช้ Gemini ถอดเสียงให้ฟรีอัตโนมัติ
+                    </p>
                   </div>
                 )}
               </div>

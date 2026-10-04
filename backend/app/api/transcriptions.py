@@ -57,7 +57,8 @@ async def transcribe_audio_endpoint(
                 logger.warning(f"Audio conversion failed: {conv_err}; attempting direct audio file")
                 work_path = temp_path
 
-        result = whisper_transcribe(work_path, language="th", api_key=stt_key)
+        provider = req_headers.get("x-llm-provider") or req_headers.get("X-LLM-Provider") or settings.LLM_PROVIDER
+        result = whisper_transcribe(work_path, language="th", api_key=stt_key, provider=provider)
         return {
             "transcript": result.get("text", ""),
             "duration": result.get("duration"),
