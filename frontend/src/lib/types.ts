@@ -71,6 +71,22 @@ export interface Feedback {
   content_coherence?: ContentCoherence;
 }
 
+export interface SpeechSegment {
+  id: number;
+  start: number;
+  end: number;
+  duration: number;
+  text: string;
+  wpm: number;
+  pace: string;
+}
+
+export interface PauseItem {
+  start_sec: number;
+  duration_sec: number;
+  is_long: boolean;
+}
+
 export interface AnalysisResponse {
   id: string;
   status: 'queued' | 'processing' | 'completed' | 'failed';
@@ -83,6 +99,8 @@ export interface AnalysisResponse {
   transcript: string;
   audio_url?: string;
   word_tokens?: { index: number; text: string; type: 'normal' | 'filler' | 'step' | 'circular' | 'repeated'; note?: string }[];
+  segments?: SpeechSegment[];
+  pauses?: PauseItem[];
   error_message?: string;
 }
 

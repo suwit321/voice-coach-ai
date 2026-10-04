@@ -109,9 +109,12 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
         if os.path.exists(audio_filepath):
             audio_url = f"/api/v1/analyses/{analysis.id}/audio"
 
-    # Extract word_tokens from content_metrics if present
+    # Extract word_tokens, segments, and pauses from content_metrics / audio_metrics if present
     content_metrics = analysis.content_metrics or {}
+    audio_metrics = analysis.audio_metrics or {}
     word_tokens = content_metrics.get("word_tokens")
+    segments = content_metrics.get("segments")
+    pauses = content_metrics.get("pauses") or audio_metrics.get("pauses")
 
     return AnalysisResponse(
         id=analysis.id,
@@ -124,7 +127,9 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
         feedback=analysis.llm_feedback,   # Assuming mapping
         transcript=analysis.transcript,
         audio_url=audio_url,
-        word_tokens=word_tokens
+        word_tokens=word_tokens,
+        segments=segments,
+        pauses=pauses
     )
 
 @router.get("/{analysis_id}/audio")

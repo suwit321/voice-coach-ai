@@ -107,12 +107,14 @@ def run_analysis_pipeline(
         # 4. If no transcript, run STT
         duration_sec = audio_metrics.get('duration_sec', 0.0)
         stt_key = effective_stt_key
+        stt_segments = []
         if (not transcript or not transcript.strip()):
             if stt_key:
                 try:
                     logger.info("Transcribing audio with Whisper...")
                     stt_res = transcribe_audio(work_audio_path, language=language, api_key=stt_key)
                     transcript = stt_res.get('text', '')
+                    stt_segments = stt_res.get('segments', [])
                 except Exception as e:
                     logger.error(f"Whisper STT failed: {e}")
                     transcript = "ไม่สามารถถอดเสียงอัตโนมัติได้ กรุณาระบุ transcript ด้วยตนเอง"
@@ -133,6 +135,9 @@ def run_analysis_pipeline(
             duration_sec=duration_sec,
             preset_filler_words=preset_filler_words
         )
+        # Attach speech rhythm timeline and pauses
+        content_metrics['segments'] = stt_segments
+        content_metrics['pauses'] = audio_metrics.get('pauses', [])
 
         
         # Merge WPM into audio_metrics for scoring

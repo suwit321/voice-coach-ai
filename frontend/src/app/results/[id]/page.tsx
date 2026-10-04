@@ -22,7 +22,10 @@ import {
   FileText, 
   Sparkles,
   BarChart3,
-  Volume2
+  Volume2,
+  Clock,
+  Activity,
+  Play
 } from 'lucide-react';
 
 export default function ResultsPage() {
@@ -204,6 +207,79 @@ export default function ResultsPage() {
           </p>
         </div>
       </div>
+
+      {/* Section 2.5: Speech Rhythm Timeline & Pace (จังหวะเสียงและการเว้นวรรค) */}
+      {((data.segments && data.segments.length > 0) || (data.pauses && data.pauses.length > 0)) && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <Activity className="w-5 h-5 mr-2 text-indigo-600" />
+            จังหวะเสียงและการเว้นวรรคตามช่วงเวลา (Speech Rhythm & Pauses)
+          </h2>
+          
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-5">
+            {/* Rhythm Summary Bar */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                <span className="text-xs font-semibold text-indigo-700 block">ช่วงหยุดพักหายใจ/คิด (Pauses)</span>
+                <span className="text-2xl font-black text-indigo-950 mt-1 block">
+                  {data.metrics.pause_count} <span className="text-xs font-normal text-gray-500">ครั้ง</span>
+                </span>
+                <span className="text-2xs text-gray-500">เฉลี่ย {data.metrics.avg_pause_duration.toFixed(2)} วินาที/ครั้ง</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
+                <span className="text-xs font-semibold text-blue-700 block">สัดส่วนเวลาพูดจริง (Speech Ratio)</span>
+                <span className="text-2xl font-black text-blue-950 mt-1 block">
+                  {Math.round(data.metrics.speech_ratio * 100)}%
+                </span>
+                <span className="text-2xs text-gray-500">เวลาพูดเทียบกับเวลาหยุด</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100">
+                <span className="text-xs font-semibold text-emerald-700 block">ความต่อเนื่องของจังหวะ</span>
+                <span className="text-2xl font-black text-emerald-950 mt-1 block">
+                  {data.metrics.wpm >= 100 && data.metrics.wpm <= 150 ? 'จังหวะพอดี' : data.metrics.wpm > 150 ? 'จังหวะเร็ว' : 'จังหวะช้า'}
+                </span>
+                <span className="text-2xs text-gray-500">{data.metrics.wpm} คำ/นาที (เป้าหมาย 100-150)</span>
+              </div>
+            </div>
+
+            {/* Segment by segment timeline */}
+            {data.segments && data.segments.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <h4 className="text-sm font-bold text-gray-800 flex items-center">
+                  <Clock className="w-4 h-4 mr-1.5 text-gray-500" />
+                  ไทม์ไลน์จังหวะการพูดแยกตามช่วงเวลา (Rhythm Segments)
+                </h4>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {data.segments.map((seg, idx) => (
+                    <div 
+                      key={idx}
+                      className="p-3.5 rounded-2xl bg-gray-50 hover:bg-gray-100/80 transition-colors border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="px-2 py-1 rounded-lg bg-white border border-gray-200 font-mono text-xs text-gray-600 font-semibold shrink-0">
+                          {Math.floor(seg.start / 60)}:{(Math.floor(seg.start % 60)).toString().padStart(2, '0')} - {Math.floor(seg.end / 60)}:{(Math.floor(seg.end % 60)).toString().padStart(2, '0')}
+                        </span>
+                        <p className="text-sm text-gray-800 leading-snug">{seg.text}</p>
+                      </div>
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <span className={`text-2xs font-semibold px-2.5 py-1 rounded-full border ${
+                          seg.pace.includes('เร็ว') 
+                            ? 'bg-rose-50 text-rose-700 border-rose-200' 
+                            : seg.pace.includes('ช้า')
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
+                          {seg.pace} ({seg.wpm} WPM)
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Section 3: Acoustics & Speech Metrics */}
       <div className="space-y-4">

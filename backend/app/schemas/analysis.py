@@ -46,6 +46,8 @@ class AnalysisResponse(BaseModel):
     transcript: Optional[str] = None
     audio_url: Optional[str] = None
     word_tokens: Optional[List[Dict[str, Any]]] = None
+    segments: Optional[List[Dict[str, Any]]] = None
+    pauses: Optional[List[Dict[str, Any]]] = None
 
 class AnalysisListItem(BaseModel):
     id: str
