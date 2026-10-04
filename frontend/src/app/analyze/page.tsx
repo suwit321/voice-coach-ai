@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useAnalysis } from '@/hooks/use-analysis';
 import { apiClient } from '@/lib/api-client';
 import { getSettings } from '@/lib/settings';
-import { Check, ChevronLeft, ArrowRight, Volume2, Sparkles, AlertCircle, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { Check, ChevronLeft, ArrowRight, Volume2, Sparkles, AlertCircle, Zap, Settings as SettingsIcon } from 'lucide-react';
 
 export default function AnalyzePage() {
   const router = useRouter();
@@ -251,14 +252,24 @@ export default function AnalyzePage() {
               </Button>
             </div>
 
-            {/* STT Notice if applicable */}
+            {/* STT Notice with 1-Click Settings Action */}
             {sttNotice && (
-              <div className="max-w-3xl mx-auto p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start space-x-3">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
-                <div>
-                  <p className="font-semibold text-amber-900">หมายเหตุการถอดเสียง</p>
-                  <p className="mt-0.5">{sttNotice}</p>
+              <div className="max-w-3xl mx-auto p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" />
+                  <div>
+                    <p className="font-bold text-amber-950 text-sm">ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่พร้อมใช้งาน</p>
+                    <p className="mt-0.5 text-amber-800 leading-relaxed">
+                      เนื่องจากยังไม่ได้ระบุ OpenAI API Key ในหน้าตั้งค่า หรือบนเซิร์ฟเวอร์ Render
+                    </p>
+                  </div>
                 </div>
+                <Link href="/settings" className="shrink-0 self-start sm:self-auto">
+                  <Button size="sm" variant="outline" className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100 font-semibold text-xs shadow-2xs">
+                    <SettingsIcon className="w-3.5 h-3.5 mr-1 text-amber-700" />
+                    ไปตั้งค่า API Key
+                  </Button>
+                </Link>
               </div>
             )}
 
