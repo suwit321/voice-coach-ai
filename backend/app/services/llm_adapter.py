@@ -13,7 +13,7 @@ class LLMAdapter(ABC):
 class OpenAIAdapter(LLMAdapter):
     def __init__(self, api_key: str, model: str = "gpt-4o"):
         from openai import OpenAI
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=api_key, timeout=25.0)
         self.model = model
     
     def generate_feedback(self, prompt: str, metrics: dict, transcript: str, preset_config: dict) -> dict:
@@ -25,7 +25,8 @@ class OpenAIAdapter(LLMAdapter):
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.7
+                temperature=0.7,
+                timeout=25.0
             )
             return json.loads(response.choices[0].message.content)
         except Exception as e:
@@ -35,7 +36,7 @@ class OpenAIAdapter(LLMAdapter):
 class AnthropicAdapter(LLMAdapter):
     def __init__(self, api_key: str, model: str = "claude-3-5-sonnet-20240620"):
         import anthropic
-        self.client = anthropic.Anthropic(api_key=api_key)
+        self.client = anthropic.Anthropic(api_key=api_key, timeout=25.0)
         self.model = model
     
     def generate_feedback(self, prompt: str, metrics: dict, transcript: str, preset_config: dict) -> dict:
@@ -61,15 +62,27 @@ class GeminiAdapter(LLMAdapter):
     
     def generate_feedback(self, prompt: str, metrics: dict, transcript: str, preset_config: dict) -> dict:
         try:
-            response = self.model.generate_content(prompt)
-            # Assuming the prompt asks for JSON output
-            text = response.text
-            # Basic cleanup if markdown backticks are present
-            if text.startswith("```json"):
-                text = text[7:-3]
-            elif text.startswith("```"):
-                text = text[3:-3]
-            return json.loads(text.strip())
+            response = self.model.generate_content(
+                prompt,
+                request_options={"timeout": 25.0}
+            )
+            raw = (response.text or "").strip()
+            # Strip markdown formatting
+            if raw.startswith("```json"):
+                raw = raw[7:]
+            elif raw.startswith("```"):
+                raw = raw[3:]
+            if raw.endswith("```"):
+                raw = raw[:-3]
+            raw = raw.strip()
+            
+            # Extract between first { and last }
+            s_idx = raw.find("{")
+            e_idx = raw.rfind("}")
+            if s_idx != -1 and e_idx != -1:
+                raw = raw[s_idx:e_idx + 1]
+
+            return json.loads(raw)
         except Exception as e:
             logger.error(f"Gemini error: {e}")
             raise e

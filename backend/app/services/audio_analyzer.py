@@ -23,22 +23,41 @@ def analyze_audio(audio_path: str) -> dict:
         energy_mean = float(np.mean(rms))
         energy_std = float(np.std(rms))
         
-        # Pitch (F0) using PYIN - use hop_length=1024 for 2-4x speedup
-        f0, voiced_flag, voiced_probs = librosa.pyin(
-            y,
-            fmin=librosa.note_to_hz('C2'),   # ~65 Hz
-            fmax=librosa.note_to_hz('C6'),   # ~1046 Hz
-            sr=sr,
-            frame_length=2048,
-            hop_length=1024  # Faster than default 512
+        # Pitch (F0) using fast downsampled YIN (~10x faster than PYIN, highly accurate for speech)
+        # Speech fundamental frequency is 65-400 Hz, so 4000 Hz sampling rate is ideal
+        pitch_sr = 4000
+        decimation = max(1, sr // pitch_sr)
+        y_pitch = y[::decimation]
+        eff_pitch_sr = sr // decimation
+        
+        # Limit pitch analysis to first 90 seconds if audio is long to prevent CPU stalls on Render
+        if len(y_pitch) > eff_pitch_sr * 90:
+            y_pitch_calc = y_pitch[:eff_pitch_sr * 90]
+        else:
+            y_pitch_calc = y_pitch
+
+        f0 = librosa.yin(
+            y_pitch_calc,
+            fmin=65,
+            fmax=400,
+            sr=eff_pitch_sr,
+            frame_length=512,
+            hop_length=256,
+            trough_threshold=0.15
         )
-        # IMPORTANT: Filter NaN values from unvoiced frames
-        valid_f0 = f0[voiced_flag & ~np.isnan(f0)]
+        
+        # Detect voiced vs silence using RMS of pitch signal
+        rms_pitch = librosa.feature.rms(y=y_pitch_calc, frame_length=512, hop_length=256)[0]
+        silence_thresh = max(0.01, float(np.mean(rms_pitch)) * 0.25)
+        min_len = min(len(f0), len(rms_pitch))
+        voiced_mask = (rms_pitch[:min_len] > silence_thresh) & (f0[:min_len] > 68) & (f0[:min_len] < 390)
+        
+        valid_f0 = f0[:min_len][voiced_mask]
         pitch_mean = float(np.mean(valid_f0)) if len(valid_f0) > 0 else 0.0
         pitch_std = float(np.std(valid_f0)) if len(valid_f0) > 0 else 0.0
         
         # Pause detection
-        non_silent = librosa.effects.split(y, top_db=25, frame_length=2048, hop_length=512)
+        non_silent = librosa.effects.split(y, top_db=25, frame_length=2048, hop_length=1024)
         pauses = []
         for i in range(len(non_silent) - 1):
             pause_start = non_silent[i][1]
@@ -67,12 +86,13 @@ def analyze_audio(audio_path: str) -> dict:
             energy_series.append(round(float(rms_norm[idx]), 1))
             
         # Resample Pitch F0 (Hz)
-        pyin_hop_time = 1024 / sr
+        pitch_hop_time = 256 / eff_pitch_sr
         pitch_series = []
         for t in time_points:
-            idx = min(len(f0) - 1, int(t / pyin_hop_time))
-            val = float(f0[idx]) if (idx < len(f0) and voiced_flag[idx] and not np.isnan(f0[idx])) else None
-            pitch_series.append(round(val, 1) if val is not None else 0.0)
+            idx = min(min_len - 1, int(t / pitch_hop_time))
+            is_v = bool(voiced_mask[idx]) if idx < min_len else False
+            val = float(f0[idx]) if (idx < min_len and is_v) else 0.0
+            pitch_series.append(round(val, 1))
 
         # Labels in mm:ss
         timeline_labels = [f"{int(t // 60):02d}:{int(t % 60):02d}" for t in time_points]

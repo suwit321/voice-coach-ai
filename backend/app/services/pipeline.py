@@ -39,10 +39,16 @@ def run_analysis_pipeline(
     
     This is a sync function that runs in FastAPI BackgroundTasks thread pool.
     """
-    effective_llm_provider = llm_provider or settings.LLM_PROVIDER
-    effective_llm_key = llm_api_key or settings.LLM_API_KEY
-    effective_llm_model = llm_model or settings.LLM_MODEL
-    effective_stt_key = stt_api_key or settings.STT_API_KEY or effective_llm_key
+    effective_llm_provider = (llm_provider or settings.LLM_PROVIDER or "openai").strip().lower()
+    effective_llm_key = (llm_api_key or settings.LLM_API_KEY or "").strip()
+    effective_llm_model = (llm_model or settings.LLM_MODEL or "").strip()
+    effective_stt_key = (stt_api_key or settings.STT_API_KEY or effective_llm_key).strip()
+
+    # Smart provider detection: if key is Google Gemini key (AIza...), switch provider to gemini
+    if effective_llm_key.startswith("AIza"):
+        effective_llm_provider = "gemini"
+        if not effective_llm_model or "gpt" in effective_llm_model or "claude" in effective_llm_model:
+            effective_llm_model = "gemini-2.0-flash"
 
     db = SessionLocal()
     converted_path = None
@@ -155,8 +161,12 @@ def run_analysis_pipeline(
             try:
                 adapter = create_llm_adapter(effective_llm_provider, effective_llm_key, effective_llm_model)
                 prompt = build_analysis_prompt(preset_config, audio_metrics, content_metrics, transcript)
-                llm_feedback = adapter.generate_feedback(prompt, {**audio_metrics, **content_metrics}, transcript, preset_config)
-
+                res = adapter.generate_feedback(prompt, {**audio_metrics, **content_metrics}, transcript, preset_config)
+                if isinstance(res, dict) and "overall_feedback" in res:
+                    llm_feedback = res
+                else:
+                    logger.warning("LLM response malformed, using rule-based feedback fallback")
+                    llm_feedback = generate_rule_based_feedback(audio_metrics, content_metrics, preset_config)
             except Exception as e:
                 logger.error(f"LLM call failed ({e}), using rule-based feedback fallback")
                 llm_feedback = generate_rule_based_feedback(audio_metrics, content_metrics, preset_config)

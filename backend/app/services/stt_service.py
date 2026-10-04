@@ -6,7 +6,8 @@ def transcribe_with_gemini(audio_path: str, api_key: str, language: str = "th") 
     """Transcribe audio using Google Gemini multimodal audio capability (Free & Fast)."""
     try:
         import google.generativeai as genai
-        genai.configure(api_key=api_key)
+        clean_key = (api_key or "").strip()
+        genai.configure(api_key=clean_key)
         
         # Upload audio file to Gemini File API
         uploaded_file = genai.upload_file(path=audio_path)
@@ -17,7 +18,7 @@ def transcribe_with_gemini(audio_path: str, api_key: str, language: str = "th") 
             "โดยให้เก็บคำฟุ่มเฟือย/คำติดปากทุกคำ เช่น 'เอ่อ', 'อ่า', 'แบบว่า', 'คือว่า', 'นะค่ะ' ไว้ครบถ้วน "
             "ตอบเฉพาะข้อความที่ถอดเสียงได้เท่านั้น ไม่ต้องมีคำอธิบายเพิ่มเติมใดๆ ทั้งสิ้น"
         )
-        response = model.generate_content([uploaded_file, prompt])
+        response = model.generate_content([uploaded_file, prompt], request_options={"timeout": 25.0})
         transcript_text = (response.text or "").strip()
         
         # Cleanup file from Gemini
@@ -37,13 +38,15 @@ def transcribe_with_gemini(audio_path: str, api_key: str, language: str = "th") 
 
 def transcribe_audio(audio_path: str, language: str = "th", api_key: str = "", provider: str = "openai") -> dict:
     """Transcribe audio using either OpenAI Whisper or Google Gemini based on key/provider."""
+    clean_key = (api_key or "").strip()
+    
     # Auto-detect if key is Google Gemini key (starts with AIza...)
-    if api_key.startswith("AIza") or provider == "gemini":
-        return transcribe_with_gemini(audio_path, api_key=api_key, language=language)
+    if clean_key.startswith("AIza") or provider == "gemini":
+        return transcribe_with_gemini(audio_path, api_key=clean_key, language=language)
 
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=api_key)
+        client = OpenAI(api_key=clean_key, timeout=25.0)
         
         with open(audio_path, 'rb') as f:
             transcription = client.audio.transcriptions.create(

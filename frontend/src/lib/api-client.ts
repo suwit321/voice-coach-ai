@@ -36,8 +36,8 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   }
   if (settings.sttApiKey) {
     headers.set('X-STT-API-Key', settings.sttApiKey);
-  } else if (settings.llmApiKey && settings.llmProvider === 'openai') {
-    // If OpenAI key is set, can also use for Whisper
+  } else if (settings.llmApiKey) {
+    // If OpenAI or Gemini key is set, also use for STT
     headers.set('X-STT-API-Key', settings.llmApiKey);
   }
 

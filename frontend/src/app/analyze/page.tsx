@@ -100,7 +100,13 @@ export default function AnalyzePage() {
   if (status !== 'idle' && status !== 'failed') {
     return (
       <div className="max-w-4xl mx-auto py-12">
-        <AnalysisStatus status={status} />
+        <AnalysisStatus 
+          status={status} 
+          onRetry={() => {
+            resetAnalysis();
+            handleStartAnalysis();
+          }}
+        />
       </div>
     );
   }
