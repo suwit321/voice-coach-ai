@@ -1,7 +1,7 @@
 import { AnalysisResponse, AnalysisListItem, PresetConfig } from './types';
 import { getSettings } from './settings';
 
-function getApiBase(): string {
+export function getApiBase(): string {
   if (typeof window !== 'undefined') {
     const s = getSettings();
     if (s.apiUrl && s.apiUrl.trim()) {

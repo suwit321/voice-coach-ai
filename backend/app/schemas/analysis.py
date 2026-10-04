@@ -44,6 +44,8 @@ class AnalysisResponse(BaseModel):
     metrics: Optional[AudioMetrics] = None
     feedback: Optional[LLMFeedbackResponse] = None
     transcript: Optional[str] = None
+    audio_url: Optional[str] = None
+    word_tokens: Optional[List[Dict[str, Any]]] = None
 
 class AnalysisListItem(BaseModel):
     id: str

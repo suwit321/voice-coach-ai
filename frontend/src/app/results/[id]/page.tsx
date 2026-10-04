@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, getApiBase } from '@/lib/api-client';
 import { AnalysisResponse } from '@/lib/types';
 import { ScoreCard } from '@/components/score-card';
 import { RadarChart } from '@/components/radar-chart';
@@ -21,7 +21,8 @@ import {
   RotateCcw, 
   FileText, 
   Sparkles,
-  BarChart3
+  BarChart3,
+  Volume2
 } from 'lucide-react';
 
 export default function ResultsPage() {
@@ -150,12 +151,36 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* Section 1.5: Audio Playback (ฟังเสียงย้อนหลัง) */}
+      {data.audio_url && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50/40 rounded-3xl border border-blue-100 p-5 md:p-6 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 w-full md:w-auto">
+            <div className="bg-blue-600 text-white p-3 rounded-2xl shadow-sm shrink-0">
+              <Volume2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-gray-900">ฟังเสียงการพูดที่คุณบันทึกไว้</h3>
+              <p className="text-xs text-gray-500">สามารถกดฟังย้อนหลังเพื่อเปรียบเทียบกับผลการวิเคราะห์</p>
+            </div>
+          </div>
+          <div className="w-full md:w-auto min-w-[280px]">
+            <audio 
+              controls 
+              src={`${getApiBase()}${data.audio_url}`} 
+              className="w-full rounded-xl shadow-2xs"
+            >
+              เบราว์เซอร์ของคุณไม่รองรับการเล่นไฟล์เสียง
+            </audio>
+          </div>
+        </div>
+      )}
+
       {/* Section 2: Spoken Transcript & Highlighted Content */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h2 className="text-xl font-bold text-gray-900 flex items-center">
             <FileText className="w-5 h-5 mr-2 text-blue-600" />
-            เนื้อหาเสียงที่พูด (Spoken Transcript)
+            เนื้อหาเสียงที่พูดและการวิเคราะห์คำต่อคำ (Verbatim & Transcript)
           </h2>
           <div className="flex items-center gap-2 text-xs">
             <span className="px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full font-medium">
@@ -172,9 +197,10 @@ export default function ResultsPage() {
             initialTranscript={data.transcript || 'ไม่มีเนื้อหาข้อความ'} 
             readOnly={true}
             fillerWords={data.metrics.filler_words}
+            wordTokens={data.word_tokens}
           />
           <p className="text-xs text-gray-400 border-t border-gray-100 pt-3">
-            💡 แถบไฮไลต์สีเหลืองแสดงคำฟุ่มเฟือยหรือคำติดปากที่ตรวจพบในเนื้อหาการพูดจริง
+            💡 คลิกที่คำที่ถูกไฮไลต์แต่ละคำเพื่อดูประเภทและคำอธิบาย (คำติดปาก, ลำดับขั้นตอน, หรือคำส่อแววพูดวน)
           </p>
         </div>
       </div>

@@ -162,6 +162,31 @@ def analyze_content(transcript: str, duration_sec: float, preset_filler_words: L
     else:
         circular_analysis = "พบการพูดวนซ้ำประเด็นเดิมหลายรอบ แนะนำให้สรุปประเด็นแรกให้จบก่อนขึ้นประเด็นใหม่"
 
+    # Word-by-word tagged tokens for interactive verbatim view
+    word_tokens: List[Dict[str, Any]] = []
+    for idx, token in enumerate(valid_tokens):
+        w_type = "normal"
+        w_note = None
+        if token in all_fillers:
+            w_type = "filler"
+            w_note = "คำฟุ่มเฟือย/คำติดปาก"
+        elif any(token in m for m in STEP_MARKERS):
+            w_type = "step"
+            w_note = "คำเชื่อมลำดับขั้นตอน"
+        elif any(token in m for m in CIRCULAR_MARKERS):
+            w_type = "circular"
+            w_note = "คำส่อแววพูดวนซ้ำ"
+        elif any(token == rw["word"] for rw in repeated_words):
+            w_type = "repeated"
+            w_note = "คำที่ใช้ซ้ำบ่อย"
+        
+        word_tokens.append({
+            "index": idx,
+            "text": token,
+            "type": w_type,
+            "note": w_note
+        })
+
     return {
         'word_count': word_count,
         'wpm': round(wpm, 1),
@@ -169,6 +194,7 @@ def analyze_content(transcript: str, duration_sec: float, preset_filler_words: L
         'filler_words': filler_words_list,
         'filler_percentage': round(filler_percentage, 1),
         'filler_positions': filler_positions,
+        'word_tokens': word_tokens,
         'avg_sentence_length': round(avg_sentence_length, 1),
         'long_sentences': long_sentences,
         'repeated_words': repeated_words,

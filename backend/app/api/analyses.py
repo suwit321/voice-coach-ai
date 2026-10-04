@@ -3,7 +3,7 @@ import shutil
 import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Header, BackgroundTasks, status, Query
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.analysis import Analysis
@@ -63,13 +63,13 @@ async def create_analysis(
         os.remove(filepath)
         raise HTTPException(status_code=400, detail="File too large")
 
-    # Create DB record
+    # Create DB record (keep audio filename so user can listen back to their speech)
     db_analysis = Analysis(
         user_id=x_session_id,
         preset_key=preset,
         language=language,
         transcript=transcript,
-        audio_filename=filename if retain_audio else None,
+        audio_filename=filename,
         status="queued"
     )
     db.add(db_analysis)
@@ -102,6 +102,17 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
     preset_data = get_preset(analysis.preset_key)
     preset_info = {"key": analysis.preset_key, "name": preset_data["name"] if preset_data else "Unknown"}
         
+    # Check if audio file is available on server
+    audio_url = None
+    if analysis.audio_filename:
+        audio_filepath = os.path.join(settings.UPLOAD_DIR, analysis.audio_filename)
+        if os.path.exists(audio_filepath):
+            audio_url = f"/api/v1/analyses/{analysis.id}/audio"
+
+    # Extract word_tokens from content_metrics if present
+    content_metrics = analysis.content_metrics or {}
+    word_tokens = content_metrics.get("word_tokens")
+
     return AnalysisResponse(
         id=analysis.id,
         status=analysis.status,
@@ -111,8 +122,31 @@ def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
         radar=analysis.dimension_scores,  # Assuming mapping
         metrics=analysis.audio_metrics,   # Assuming mapping
         feedback=analysis.llm_feedback,   # Assuming mapping
-        transcript=analysis.transcript
+        transcript=analysis.transcript,
+        audio_url=audio_url,
+        word_tokens=word_tokens
     )
+
+@router.get("/{analysis_id}/audio")
+def get_analysis_audio(analysis_id: str, db: Session = Depends(get_db)):
+    """Stream saved audio file for playback in frontend."""
+    analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+    if not analysis or not analysis.audio_filename:
+        raise HTTPException(status_code=404, detail="Audio file not found or not retained")
+        
+    filepath = os.path.join(settings.UPLOAD_DIR, analysis.audio_filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Audio file does not exist on disk")
+        
+    media_type = "audio/webm"
+    if filepath.endswith(".wav"):
+        media_type = "audio/wav"
+    elif filepath.endswith(".mp3"):
+        media_type = "audio/mpeg"
+    elif filepath.endswith(".m4a"):
+        media_type = "audio/mp4"
+
+    return FileResponse(filepath, media_type=media_type)
 
 @router.get("", response_model=AnalysisListResponse)
 def list_analyses(

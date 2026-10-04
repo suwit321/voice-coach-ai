@@ -81,6 +81,8 @@ export interface AnalysisResponse {
   metrics: AudioMetrics;
   feedback: Feedback | null;
   transcript: string;
+  audio_url?: string;
+  word_tokens?: { index: number; text: string; type: 'normal' | 'filler' | 'step' | 'circular' | 'repeated'; note?: string }[];
   error_message?: string;
 }
 
