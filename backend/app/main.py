@@ -11,24 +11,15 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Set up CORS middleware
-origins = settings.CORS_ORIGINS if settings.CORS_ORIGINS else ["*"]
-if "*" in origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-else:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Set up CORS middleware to allow all origins (including Vercel, localhost, and custom domains)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_origin_regex=r"^https?://.*$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():

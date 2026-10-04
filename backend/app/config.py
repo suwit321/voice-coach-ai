@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Any
 
 class Settings(BaseSettings):
     APP_NAME: str = "Voice Coach AI"
@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     STT_PROVIDER: str = "openai"
     STT_API_KEY: str = ""
     AUDIO_RETENTION_HOURS: int = 24
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: Any = "*"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
