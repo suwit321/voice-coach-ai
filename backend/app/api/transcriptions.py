@@ -3,7 +3,7 @@ import uuid
 import shutil
 import logging
 from typing import Optional
-from fastapi import APIRouter, UploadFile, File, HTTPException, Header
+from fastapi import APIRouter, UploadFile, File, HTTPException, Header, Request
 from ..config import settings
 from ..services.stt_service import transcribe_audio as whisper_transcribe
 from ..utils.audio_utils import convert_to_wav
@@ -13,12 +13,23 @@ router = APIRouter()
 
 @router.post("")
 async def transcribe_audio_endpoint(
+    request: Request,
     audio_file: UploadFile = File(...),
     x_stt_api_key: Optional[str] = Header(None),
     x_llm_api_key: Optional[str] = Header(None)
 ):
     """Accepts an audio file and returns transcript text using Whisper STT."""
-    stt_key = x_stt_api_key or x_llm_api_key or settings.STT_API_KEY or settings.LLM_API_KEY
+    req_headers = request.headers
+    stt_key = (
+        x_stt_api_key or 
+        x_llm_api_key or 
+        req_headers.get("x-stt-api-key") or 
+        req_headers.get("x-llm-api-key") or 
+        req_headers.get("X-STT-API-Key") or 
+        req_headers.get("X-LLM-API-Key") or 
+        settings.STT_API_KEY or 
+        settings.LLM_API_KEY
+    )
     if not stt_key:
         raise HTTPException(
             status_code=400,

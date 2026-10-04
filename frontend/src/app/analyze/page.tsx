@@ -72,8 +72,13 @@ export default function AnalyzePage() {
         setSttNotice('ถอดเสียงไม่สำเร็จ สามารถพิมพ์เนื้อหาเองหรือกดวิเคราะห์เสียงได้ทันที');
       }
     } catch (err: any) {
-      console.warn('Transcription service note:', err);
-      setSttNotice('ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่ได้เปิดใช้งานคีย์ API — คุณสามารถพิมพ์เนื้อหาที่พูดลงในช่องด้านล่าง หรือกดวิเคราะห์คุณลักษณะเสียงได้ทันที');
+      console.warn('Transcription service error:', err);
+      const errDetail = err?.message || '';
+      if (errDetail.includes('400') || errDetail.includes('not configured')) {
+        setSttNotice('ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่ได้เปิดใช้งานคีย์ API — กรุณาตรวจสอบว่าได้ระบุ OpenAI API Key ในหน้าตั้งค่าแล้ว');
+      } else {
+        setSttNotice(`การถอดเสียงล้มเหลว: ${errDetail || 'เกิดข้อผิดพลาดในการประมวลผลเสียง'} — คุณสามารถพิมพ์เนื้อหาที่พูดลงในช่องด้านล่าง หรือกดเริ่มวิเคราะห์ได้ทันที`);
+      }
     } finally {
       setIsTranscribing(false);
     }
@@ -252,24 +257,38 @@ export default function AnalyzePage() {
               </Button>
             </div>
 
-            {/* STT Notice with 1-Click Settings Action */}
+            {/* STT Notice with 1-Click Retry and Settings Action */}
             {sttNotice && (
               <div className="max-w-3xl mx-auto p-4 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div className="flex items-start space-x-3">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-600" />
                   <div>
-                    <p className="font-bold text-amber-950 text-sm">ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่พร้อมใช้งาน</p>
+                    <p className="font-bold text-amber-950 text-sm">การถอดเสียงอัตโนมัติ (STT)</p>
                     <p className="mt-0.5 text-amber-800 leading-relaxed">
-                      เนื่องจากยังไม่ได้ระบุ OpenAI API Key ในหน้าตั้งค่า หรือบนเซิร์ฟเวอร์ Render
+                      {sttNotice}
                     </p>
                   </div>
                 </div>
-                <Link href="/settings" className="shrink-0 self-start sm:self-auto">
-                  <Button size="sm" variant="outline" className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100 font-semibold text-xs shadow-2xs">
-                    <SettingsIcon className="w-3.5 h-3.5 mr-1 text-amber-700" />
-                    ไปตั้งค่า API Key
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                  <Button 
+                    size="sm" 
+                    variant="default"
+                    onClick={() => {
+                      setTranscript('');
+                      handleProceedToStep3();
+                    }}
+                    disabled={isTranscribing || !audioBlob}
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow-2xs"
+                  >
+                    🔄 ลองถอดเสียงอีกครั้ง
                   </Button>
-                </Link>
+                  <Link href="/settings">
+                    <Button size="sm" variant="outline" className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100 font-semibold text-xs shadow-2xs">
+                      <SettingsIcon className="w-3.5 h-3.5 mr-1 text-amber-700" />
+                      ตั้งค่า
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
 
