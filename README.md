@@ -29,9 +29,18 @@ AI-powered speech coaching web application that analyzes both voice and content 
 - **Node.js** 20+
 - **FFmpeg** 6+ (must be in PATH)
 
-## Quick Start
+## Quick Start (รันในเครื่องง่ายๆ เพียงดับเบิลคลิกเดียว)
 
-### 1. Backend Setup
+### 🚀 วิธีเปิดใช้งานแบบ 1-Click (แนะนำสำหรับ Windows):
+เพียงดับเบิลคลิกไฟล์:
+- **`start_all.bat`** — ระบบจะเปิดทั้ง Backend (FastAPI) และ Frontend (Next.js) ให้โดยอัตโนมัติ พร้อมเปิดเบราว์เซอร์เข้าหน้าเว็บทันทีที่ `http://localhost:3000`
+- **`stop_all.bat`** — ปิดเซิร์ฟเวอร์ทั้งหมดอย่างปลอดภัยเมื่อใช้งานเสร็จ
+
+---
+
+### หรือรันด้วยคำสั่ง Terminal:
+
+#### 1. Backend Setup
 
 ```bash
 cd backend
@@ -44,10 +53,6 @@ venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Copy and configure environment variables
-copy .env.example .env
-# Edit .env with your API keys
 
 # Start the backend server
 uvicorn app.main:app --reload --port 8000

@@ -75,7 +75,7 @@ export default function AnalyzePage() {
       console.warn('Transcription service error:', err);
       const errDetail = err?.message || '';
       if (errDetail.includes('400') || errDetail.includes('not configured')) {
-        setSttNotice('ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่ได้เปิดใช้งานคีย์ API — กรุณาตรวจสอบว่าได้ระบุ OpenAI API Key ในหน้าตั้งค่าแล้ว');
+        setSttNotice('ระบบถอดเสียงอัตโนมัติ (STT) ยังไม่ได้เปิดใช้งานคีย์ API — คุณสามารถระบุ API Key (OpenAI หรือ Gemini ฟรี) ในหน้าตั้งค่า หรือพิมพ์ข้อความในช่องด้านล่างแล้วกดวิเคราะห์ได้ทันที');
       } else {
         setSttNotice(`การถอดเสียงล้มเหลว: ${errDetail || 'เกิดข้อผิดพลาดในการประมวลผลเสียง'} — คุณสามารถพิมพ์เนื้อหาที่พูดลงในช่องด้านล่าง หรือกดเริ่มวิเคราะห์ได้ทันที`);
       }

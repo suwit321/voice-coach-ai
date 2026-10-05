@@ -7,11 +7,12 @@ export interface AppSettings {
   language: string;
 
   // AI & STT Configuration
-  llmProvider: 'openai' | 'anthropic' | 'gemini';
+  llmProvider: 'openai' | 'anthropic' | 'gemini' | 'ollama';
   llmModel: string;
   llmApiKey: string;
   sttApiKey: string;
   enableAutoStt: boolean;
+  localLlmUrl?: string;
 
   // Audio Hardware & Processing
   noiseSuppression: boolean;
@@ -32,19 +33,20 @@ export const DEFAULT_SETTINGS: AppSettings = {
   targetWpmMax: 150,
   language: 'th',
 
-  apiUrl: '',
+  apiUrl: 'http://localhost:8000',
 
   llmProvider: 'openai',
   llmModel: 'gpt-4o',
   llmApiKey: '',
   sttApiKey: '',
   enableAutoStt: true,
+  localLlmUrl: 'http://localhost:11434/v1',
 
   noiseSuppression: true,
   echoCancellation: true,
   autoGainControl: true,
 
-  retainAudio: false,
+  retainAudio: true,
 };
 
 const SETTINGS_KEY = 'voice_coach_app_settings';

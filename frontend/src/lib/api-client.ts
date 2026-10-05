@@ -27,7 +27,13 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   // Inject user custom settings headers if configured in frontend
   const settings = getSettings();
-  if (settings.llmApiKey) {
+  if (settings.llmProvider === 'ollama') {
+    headers.set('X-LLM-Provider', 'ollama');
+    headers.set('X-LLM-API-Key', settings.localLlmUrl || 'http://localhost:11434/v1');
+    if (settings.llmModel) {
+      headers.set('X-LLM-Model', settings.llmModel);
+    }
+  } else if (settings.llmApiKey) {
     headers.set('X-LLM-API-Key', settings.llmApiKey);
     headers.set('X-LLM-Provider', settings.llmProvider);
     if (settings.llmModel) {
@@ -50,10 +56,18 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     });
   } catch (netErr: any) {
     console.error('Fetch error connecting to:', `${apiBase}${url}`, netErr);
-    throw new Error(
-      `ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ (${apiBase}) ` +
-      `กรุณาตรวจสอบว่า Backend เปิดทำงานอยู่หรือไม่ หรือไปที่หน้า 'ตั้งค่า' เพื่อระบุ Backend Server URL ให้ถูกต้อง`
-    );
+    const isLocal = apiBase.includes('localhost') || apiBase.includes('127.0.0.1');
+    if (isLocal) {
+      throw new Error(
+        `ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ในเครื่องได้ (${apiBase}) ` +
+        `กรุณาตรวจสอบว่าได้เปิด run_backend.bat หรือ start_all.bat แล้วหรือยัง`
+      );
+    } else {
+      throw new Error(
+        `ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ Backend ได้ (${apiBase}) ` +
+        `หากต้องการใช้งานในเครื่อง กรุณาไปที่หน้า 'ตั้งค่า' เพื่อสลับเป็น Localhost (http://localhost:8000)`
+      );
+    }
   }
 
   if (!response.ok) {

@@ -189,33 +189,74 @@ export default function SettingsPage() {
               </div>
 
               {/* Backend API Server URL */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-800">
-                    ที่อยู่ Backend Server URL (API Host)
-                  </label>
-                  <span className="text-2xs text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">
-                    {settings.apiUrl ? 'กำหนดเอง' : 'ค่าเริ่มต้น (Default)'}
-                  </span>
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <span>โหมดการเชื่อมต่อ Backend Server</span>
+                    </label>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      เลือกใช้งานระหว่างรันในเครื่องตัวเอง (แนะนำ) หรือเชื่อมต่อเซิร์ฟเวอร์คลาวด์
+                    </p>
+                  </div>
+                  
+                  {/* Quick Mode Switches */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleChange('apiUrl', 'http://localhost:8000')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        (!settings.apiUrl || settings.apiUrl.includes('localhost') || settings.apiUrl.includes('127.0.0.1'))
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      💻 รันในเครื่อง (Localhost)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChange('apiUrl', 'https://voice-coach-ai-mf1o.onrender.com')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                        (settings.apiUrl && settings.apiUrl.includes('onrender'))
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      ☁️ คลาวด์ (Render)
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={settings.apiUrl || ''}
-                  onChange={(e) => handleChange('apiUrl', e.target.value)}
-                  placeholder="เช่น http://localhost:8000 หรือ https://your-backend.onrender.com"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                />
-                <p className="text-xs text-slate-500">
-                  หากรันในเครื่องให้เว้นว่างไว้หรือใส่ <code>http://localhost:8000</code> หาก Deploy บน Render ให้ใส่ URL ของ Render
-                </p>
+
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    value={settings.apiUrl || 'http://localhost:8000'}
+                    onChange={(e) => handleChange('apiUrl', e.target.value)}
+                    placeholder="เช่น http://localhost:8000"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                  />
+                  <div className="flex items-center justify-between text-2xs text-slate-500">
+                    <span>
+                      💡 หากรันในเครื่อง ให้ดับเบิลคลิกไฟล์ <code>start_all.bat</code> เพื่อเปิดระบบอัตโนมัติ
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleChange('apiUrl', 'http://localhost:8000')}
+                      className="text-blue-600 hover:underline font-semibold"
+                    >
+                      รีเซ็ตเป็น http://localhost:8000
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Provider Selector Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { id: 'openai', name: 'OpenAI', desc: 'GPT-4o, GPT-4o-mini', color: 'border-green-500 bg-green-50/20' },
+                  { id: 'gemini', name: 'Google Gemini', desc: 'Gemini 2.0 Flash (ฟรี & เร็ว)', color: 'border-blue-500 bg-blue-50/20' },
                   { id: 'anthropic', name: 'Anthropic', desc: 'Claude 3.5 Sonnet', color: 'border-amber-500 bg-amber-50/20' },
-                  { id: 'gemini', name: 'Google Gemini', desc: 'Gemini 2.0 Flash', color: 'border-blue-500 bg-blue-50/20' },
+                  { id: 'ollama', name: 'Ollama / Local LLM', desc: 'Llama 3.2, Typhoon (รันในเครื่อง)', color: 'border-purple-500 bg-purple-50/20' },
                 ].map((prov) => (
                   <button
                     key={prov.id}
@@ -225,6 +266,7 @@ export default function SettingsPage() {
                       if (prov.id === 'openai') handleChange('llmModel', 'gpt-4o');
                       if (prov.id === 'anthropic') handleChange('llmModel', 'claude-3-5-sonnet-20240620');
                       if (prov.id === 'gemini') handleChange('llmModel', 'gemini-2.0-flash');
+                      if (prov.id === 'ollama') handleChange('llmModel', 'llama3.2');
                     }}
                     className={`p-4 rounded-2xl border-2 text-left transition-all ${
                       settings.llmProvider === prov.id
@@ -237,6 +279,25 @@ export default function SettingsPage() {
                   </button>
                 ))}
               </div>
+
+              {/* If Ollama selected, show Ollama Base URL input */}
+              {settings.llmProvider === 'ollama' && (
+                <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-200 space-y-2">
+                  <label className="text-sm font-semibold text-purple-900 block">
+                    ที่อยู่ Ollama API Endpoint (Base URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={settings.localLlmUrl || 'http://localhost:11434/v1'}
+                    onChange={(e) => handleChange('localLlmUrl', e.target.value)}
+                    placeholder="http://localhost:11434/v1 หรือ http://localhost:1234/v1"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm font-mono bg-white"
+                  />
+                  <p className="text-xs text-purple-700">
+                    💡 รันคำสั่ง <code>ollama run llama3.2</code> หรือเปิด LM Studio ในเครื่องได้ทันที
+                  </p>
+                </div>
+              )}
 
               {/* Model Input */}
               <div className="space-y-2">

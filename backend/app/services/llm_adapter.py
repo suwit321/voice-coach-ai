@@ -87,12 +87,50 @@ class GeminiAdapter(LLMAdapter):
             logger.error(f"Gemini error: {e}")
             raise e
 
+class OllamaAdapter(LLMAdapter):
+    def __init__(self, api_key: str = "ollama", model: str = "llama3.2"):
+        from openai import OpenAI
+        base_url = "http://localhost:11434/v1"
+        clean_key = (api_key or "").strip()
+        if clean_key.startswith("http://") or clean_key.startswith("https://"):
+            base_url = clean_key
+            clean_key = "ollama"
+        if not base_url.endswith("/v1"):
+            base_url = f"{base_url.rstrip('/')}/v1"
+            
+        self.client = OpenAI(base_url=base_url, api_key=clean_key or "ollama", timeout=45.0)
+        self.model = model or "llama3.2"
+
+    def generate_feedback(self, prompt: str, metrics: dict, transcript: str, preset_config: dict) -> dict:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful Voice Coach AI. Please format your response in valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.7,
+                timeout=45.0
+            )
+            raw = (response.choices[0].message.content or "").strip()
+            # Extract JSON if extra text returned
+            s_idx = raw.find("{")
+            e_idx = raw.rfind("}")
+            if s_idx != -1 and e_idx != -1:
+                raw = raw[s_idx:e_idx + 1]
+            return json.loads(raw)
+        except Exception as e:
+            logger.error(f"Local Ollama error: {e}")
+            raise e
+
 def create_llm_adapter(provider: str, api_key: str, model: str) -> LLMAdapter:
     """Factory function to create the right adapter."""
     adapters = {
         'openai': OpenAIAdapter,
         'anthropic': AnthropicAdapter,
         'gemini': GeminiAdapter,
+        'ollama': OllamaAdapter,
     }
     if provider not in adapters:
         raise ValueError(f"Unknown provider: {provider}")
